@@ -10,7 +10,7 @@ from hermes_browser_sidecar.service import SidecarService
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="hermes-browser-sidecar",
-        description="Starter local sidecar service for Hermes browser integrations.",
+        description="Local sidecar service for Hermes browser integrations.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("print-config", help="Print normalized sidecar settings as JSON.")
@@ -40,4 +40,3 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.error(f"Unsupported command: {args.command}")
     return 2
-

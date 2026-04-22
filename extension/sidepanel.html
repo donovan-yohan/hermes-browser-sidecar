@@ -7,28 +7,72 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="shell">
+    <main class="shell sidepanel-shell">
       <header class="hero">
-        <p class="eyebrow">scaffold</p>
+        <p class="eyebrow">bridge-backed sidecar</p>
         <h1>Hermes Browser Sidecar</h1>
-        <p class="subhead">This side panel is intentionally narrow for now: it validates the local sidecar boundary before any full Hermes transport is ported.</p>
+        <p class="subhead">Chat with Hermes beside the page without binding the extension directly to Hermes gateway routes.</p>
       </header>
 
       <section class="card">
-        <p class="label">Backend</p>
-        <p id="backend-url" class="mono">Loading...</p>
-        <p class="label">Transport</p>
-        <p id="transport-summary">Loading...</p>
-        <p class="label">Capabilities</p>
-        <pre id="capabilities" class="pre">Loading...</pre>
-        <div class="button-row">
-          <button id="refresh-button" type="button">Refresh</button>
-          <button id="options-button" type="button" class="ghost">Options</button>
+        <div class="panel-head">
+          <div>
+            <p class="label">Backend</p>
+            <p id="backend-url" class="mono">Loading...</p>
+            <p id="transport-summary" class="meta-line">Adapter unknown.</p>
+            <p id="session-id" class="meta-line">Session ID unavailable.</p>
+          </div>
+          <div class="button-row compact-row">
+            <button id="refresh-button" type="button" class="ghost">Refresh</button>
+            <button id="options-button" type="button" class="ghost">Options</button>
+          </div>
         </div>
+      </section>
+
+      <section class="card">
+        <div class="panel-head">
+          <div>
+            <p class="label">Current Page</p>
+            <p id="page-title" class="page-title">Loading page context...</p>
+            <p id="page-url" class="meta-line"></p>
+            <p id="page-meta" class="meta-line">0 selected chars • 0 page chars</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="panel-head">
+          <div>
+            <p class="label">Conversation</p>
+            <p class="meta-line">Use <span class="mono">Cmd/Ctrl+Enter</span> to send.</p>
+          </div>
+          <div class="button-row compact-row">
+            <button id="reset-button" type="button" class="ghost">New Chat</button>
+            <button id="interrupt-button" type="button" hidden>Interrupt</button>
+          </div>
+        </div>
+
+        <div id="chat-messages" class="chat-messages">
+          <div class="empty-state">Loading conversation...</div>
+        </div>
+
+        <label class="checkbox-row">
+          <input id="use-page" type="checkbox">
+          <span>Use current page as context for this turn</span>
+        </label>
+
+        <label class="field">
+          <span>Message</span>
+          <textarea id="chat-input" rows="5" placeholder="Ask Hermes about the page, or leave this blank and just share the page context."></textarea>
+        </label>
+
+        <div class="button-row">
+          <button id="send-button" type="button">Send</button>
+        </div>
+
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </section>
     </main>
     <script src="sidepanel.js"></script>
   </body>
 </html>
-

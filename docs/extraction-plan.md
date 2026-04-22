@@ -11,6 +11,7 @@
 ## Phase 1: Bridge-Backed Sidecar Protocol
 
 - implement `GET /v1/session/state`
+- implement `GET /v1/sessions`
 - implement `POST /v1/session/send`
 - implement `POST /v1/session/reset`
 - implement `POST /v1/session/interrupt`
@@ -18,7 +19,7 @@
 
 ## Phase 2: Browser Context Packaging
 
-- port page-context normalization into sidecar-owned request objects
+- tighten page-context normalization and truncation rules
 - decide which extraction stays in the extension and which moves server-side
 - add attachment and transcript flow tests
 
@@ -34,4 +35,3 @@
 - integration tests against live Hermes processes
 - packaging and developer setup
 - documentation for supported Hermes versions and known compatibility risks
-
