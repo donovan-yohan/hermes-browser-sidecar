@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hermes Browser Sidecar</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">scaffold</p>
+        <h1>Hermes Browser Sidecar</h1>
+        <p class="subhead">This side panel is intentionally narrow for now: it validates the local sidecar boundary before any full Hermes transport is ported.</p>
+      </header>
+
+      <section class="card">
+        <p class="label">Backend</p>
+        <p id="backend-url" class="mono">Loading...</p>
+        <p class="label">Transport</p>
+        <p id="transport-summary">Loading...</p>
+        <p class="label">Capabilities</p>
+        <pre id="capabilities" class="pre">Loading...</pre>
+        <div class="button-row">
+          <button id="refresh-button" type="button">Refresh</button>
+          <button id="options-button" type="button" class="ghost">Options</button>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>
+
