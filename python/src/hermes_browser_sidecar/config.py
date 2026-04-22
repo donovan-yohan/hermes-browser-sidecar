@@ -10,6 +10,7 @@ DEFAULT_SERVICE_PORT = 8787
 DEFAULT_HERMES_BRIDGE_URL = "http://127.0.0.1:8765/inject"
 DEFAULT_HERMES_API_SERVER_URL = "http://127.0.0.1:8642/v1"
 DEFAULT_TRANSPORT = "hybrid"
+DEFAULT_BROWSER_LABEL = "Hermes Browser Sidecar"
 ALLOWED_TRANSPORTS = {"bridge", "api_server", "hybrid"}
 
 
@@ -23,6 +24,7 @@ class SidecarSettings:
     service_host: str
     service_port: int
     transport: str
+    browser_label: str
     hermes_bridge_url: str
     hermes_bridge_token: str
     hermes_api_server_url: str
@@ -45,6 +47,11 @@ class SidecarSettings:
             service_host=_read_env(source, "HERMES_SIDECAR_HOST", DEFAULT_SERVICE_HOST),
             service_port=service_port,
             transport=transport,
+            browser_label=_read_env(
+                source,
+                "HERMES_SIDECAR_BROWSER_LABEL",
+                DEFAULT_BROWSER_LABEL,
+            ),
             hermes_bridge_url=_read_env(
                 source,
                 "HERMES_BROWSER_BRIDGE_URL",
@@ -67,4 +74,3 @@ class SidecarSettings:
         data = asdict(self)
         data["service_base_url"] = self.service_base_url
         return data
-

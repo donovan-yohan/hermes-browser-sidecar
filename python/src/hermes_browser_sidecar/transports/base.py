@@ -25,7 +25,55 @@ class TransportProbe:
 
 class BaseTransport:
     name = "base"
+    supports_sessions = False
 
     def probe(self) -> TransportProbe:
         raise NotImplementedError
 
+    def get_session_state(
+        self,
+        *,
+        browser_label: str,
+        client_session_id: str,
+        session_key: str = "",
+    ) -> dict[str, object]:
+        raise NotImplementedError
+
+    def list_sessions(
+        self,
+        *,
+        browser_label: str,
+        client_session_id: str,
+        session_key: str = "",
+        limit: int = 25,
+    ) -> dict[str, object]:
+        raise NotImplementedError
+
+    def send_message(
+        self,
+        *,
+        browser_label: str,
+        client_session_id: str,
+        session_key: str = "",
+        message: str = "",
+        page_context: dict[str, object] | None = None,
+    ) -> dict[str, object]:
+        raise NotImplementedError
+
+    def reset_session(
+        self,
+        *,
+        browser_label: str,
+        client_session_id: str,
+        session_key: str = "",
+    ) -> dict[str, object]:
+        raise NotImplementedError
+
+    def interrupt_session(
+        self,
+        *,
+        browser_label: str,
+        client_session_id: str,
+        session_key: str = "",
+    ) -> dict[str, object]:
+        raise NotImplementedError

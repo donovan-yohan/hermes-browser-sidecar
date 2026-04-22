@@ -45,10 +45,11 @@ The public boundary for this repo should be a small local HTTP protocol that the
 
 - `GET /health`
 - `GET /v1/capabilities`
-- future `GET /v1/session/state`
-- future `POST /v1/session/send`
-- future `POST /v1/session/reset`
-- future `POST /v1/session/interrupt`
+- `GET /v1/session/state`
+- `GET /v1/sessions`
+- `POST /v1/session/send`
+- `POST /v1/session/reset`
+- `POST /v1/session/interrupt`
 
 The extension should render based on declared capabilities instead of assuming bridge-only features exist.
 
@@ -76,12 +77,12 @@ The extension should render based on declared capabilities instead of assuming b
 
 ## Current Implementation Scope
 
-This scaffold only implements:
+The current implementation now covers:
 
 - configuration loading
-- upstream probe logic
-- a tiny sidecar service with `health` and `capabilities`
-- a minimal MV3 extension that exercises those endpoints
+- upstream health probing
+- bridge-backed session state/list/send/reset/interrupt flows
+- MV3 side-panel chat UI backed only by the local sidecar service
+- page-context bundling from the active tab in the extension
 
-It does not implement full session transport yet.
-
+It still does not implement transcript/media helper parity, TTS/STT flows, or a real API-server-backed session mode.

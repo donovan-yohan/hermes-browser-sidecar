@@ -1,6 +1,6 @@
 # hermes-browser-sidecar
 
-`hermes-browser-sidecar` is a public extraction scaffold for a portable Hermes browser sidecar.
+`hermes-browser-sidecar` is a public browser sidecar for Hermes that keeps the extension on a stable local protocol while translating to Hermes's current browser bridge underneath.
 
 The current recommendation is a hybrid architecture:
 
@@ -9,7 +9,11 @@ The current recommendation is a hybrid architecture:
 - the first backend adapter targets Hermes Agent's existing browser bridge
 - a future adapter can use the OpenAI-compatible API server where that surface is sufficient
 
-This repository is intentionally conservative. It does not attempt to port the full Hermes sidecar yet. The current scaffold focuses on investigation, architecture, starter packaging, and a minimal no-build MV3 extension shell.
+This repository still stays conservative on architecture, but it now ships a materially usable bridge-backed baseline:
+
+- the Python service exposes local `/v1/...` sidecar endpoints
+- the MV3 extension can read session state, send messages, start a new chat, interrupt a turn, and optionally bundle page context from the active tab
+- Hermes-specific bridge action names and bearer-token details stay inside the service adapter
 
 ## Why Hybrid
 
@@ -19,13 +23,13 @@ Hermes Agent also exposes an OpenAI-compatible API server. That surface is much 
 
 The compromise is to stabilize a local sidecar protocol here, keep the extension dumb, and let backend adapters absorb Hermes-specific integration seams.
 
-## Current Scaffold
+## Current State
 
 - [docs/investigation.md](docs/investigation.md)
 - [docs/architecture.md](docs/architecture.md)
 - [docs/extraction-plan.md](docs/extraction-plan.md)
-- `python/` for the starter backend package
-- `extension/` for the starter Chrome/Chromium MV3 side panel client
+- `python/` for the local sidecar service and Hermes adapters
+- `extension/` for the Chrome/Chromium MV3 side panel client
 - [TODO.md](TODO.md) for concrete next steps
 
 ## Quick Start
@@ -53,16 +57,37 @@ Defaults:
 - Hermes bridge probe target: `http://127.0.0.1:8765/inject`
 - Hermes API server probe target: `http://127.0.0.1:8642/v1`
 - transport mode: `hybrid`
+- browser label: `Hermes Browser Sidecar`
 
-### Extension scaffold
+### Pair with Hermes
+
+Start Hermes on the matching bridge-enabled branch and run:
+
+```bash
+HERMES_SIDECAR_TRANSPORT=hybrid \
+HERMES_BROWSER_BRIDGE_URL=http://127.0.0.1:8765/inject \
+HERMES_BROWSER_BRIDGE_TOKEN="$(cat "${HERMES_HOME:-$HOME/.hermes}/browser_bridge_token")" \
+PYTHONPATH=python/src python3 -m hermes_browser_sidecar serve
+```
+
+### Extension
 
 1. Open `chrome://extensions`
 2. Enable `Developer mode`
 3. Click `Load unpacked`
 4. Select the local `extension/` directory
-5. Open the side panel or the options page
+5. Open the options page and confirm the backend URL is `http://127.0.0.1:8787`
+6. Open the side panel
+7. Send a message, or leave the composer empty and send with `Use current page` enabled to share page context only
 
-The extension currently verifies sidecar health and reads declared capabilities. It does not yet attempt a full Hermes chat transport.
+Current extension behavior:
+
+- shows the active page title/URL plus text-size metadata
+- reads current Hermes sidecar session state
+- sends normal chat turns
+- sends chat turns with bundled page context from the active tab
+- starts a fresh sidecar chat
+- interrupts the current Hermes turn
 
 ## Repository Layout
 
@@ -76,6 +101,20 @@ The extension currently verifies sidecar health and reads declared capabilities.
 ├── CODEX_TASK.md
 └── TODO.md
 ```
+
+## Local Protocol
+
+The extension only talks to the local sidecar service. The current public routes are:
+
+- `GET /health`
+- `GET /v1/capabilities`
+- `GET /v1/session/state`
+- `GET /v1/sessions`
+- `POST /v1/session/send`
+- `POST /v1/session/reset`
+- `POST /v1/session/interrupt`
+
+The bridge adapter translates those calls to Hermes browser-bridge routes and action names internally.
 
 ## Provenance
 

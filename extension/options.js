@@ -1,5 +1,5 @@
 const backendUrlInput = document.getElementById("backend-url");
-const transportModeSelect = document.getElementById("transport-mode");
+const includePageByDefaultInput = document.getElementById("include-page-by-default");
 const saveButton = document.getElementById("save-button");
 const healthButton = document.getElementById("health-button");
 const statusElement = document.getElementById("status");
@@ -20,7 +20,7 @@ async function loadSettings() {
   }
 
   backendUrlInput.value = response.result.backendUrl || "";
-  transportModeSelect.value = response.result.transportMode || "hybrid";
+  includePageByDefaultInput.checked = response.result.includePageByDefault !== false;
 }
 
 async function saveSettings() {
@@ -28,7 +28,7 @@ async function saveSettings() {
     type: "sidecar:save-settings",
     payload: {
       backendUrl: backendUrlInput.value,
-      transportMode: transportModeSelect.value
+      includePageByDefault: includePageByDefaultInput.checked
     }
   });
 
@@ -63,4 +63,3 @@ healthButton.addEventListener("click", () => {
 loadSettings()
   .then(() => setStatus("Settings loaded."))
   .catch((error) => setStatus(String(error?.message || error), true));
-

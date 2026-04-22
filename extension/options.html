@@ -20,12 +20,11 @@
           <input id="backend-url" type="url" spellcheck="false" placeholder="http://127.0.0.1:8787">
         </label>
         <label class="field">
-          <span>Transport mode</span>
-          <select id="transport-mode">
-            <option value="hybrid">hybrid</option>
-            <option value="bridge">bridge</option>
-            <option value="api_server">api_server</option>
-          </select>
+          <span>Default behavior</span>
+          <label class="checkbox-row">
+            <input id="include-page-by-default" type="checkbox">
+            <span>Include the current page with new messages by default</span>
+          </label>
         </label>
         <div class="button-row">
           <button id="save-button" type="button">Save</button>
@@ -37,4 +36,3 @@
     <script src="options.js"></script>
   </body>
 </html>
-
