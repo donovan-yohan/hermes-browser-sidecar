@@ -118,7 +118,8 @@ class HermesAPIServerTransport(BaseTransport):
             if page_context.page_text:
                 preamble += f"page_text:\n{page_context.page_text}\n"
             items.append({"role": "user", "content": preamble})
-        items.append({"role": "user", "content": message})
+        if message:
+            items.append({"role": "user", "content": message})
         return items
 
     @staticmethod
@@ -240,9 +241,10 @@ class HermesAPIServerTransport(BaseTransport):
                     metadata={"title": page_context.title, "url": page_context.url},
                 )
             )
-        record.messages.append(
-            SidecarMessage(role="user", content=message, timestamp=_utc_now_iso())
-        )
+        if message:
+            record.messages.append(
+                SidecarMessage(role="user", content=message, timestamp=_utc_now_iso())
+            )
         new_id = response.get("id")
         if isinstance(new_id, str) and new_id:
             record.previous_response_id = new_id

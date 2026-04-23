@@ -30,20 +30,49 @@ function applyCapabilities(caps) {
   sendButton.disabled = !capabilities.session_send;
 }
 
+function normalizeMessageRole(role) {
+  const normalized = String(role || "assistant").toLowerCase();
+  return ["user", "assistant", "system"].includes(normalized) ? normalized : "assistant";
+}
+
 function renderMessages(messages) {
+  messagesElement.replaceChildren();
+
   if (!messages || messages.length === 0) {
-    messagesElement.innerHTML = '<p class="empty-state">No messages yet.</p>';
+    const emptyState = document.createElement("p");
+    emptyState.className = "empty-state";
+    emptyState.textContent = "No messages yet.";
+    messagesElement.appendChild(emptyState);
     return;
   }
-  const html = messages
-    .map((msg) => {
-      const role = (msg.role || "assistant").toLowerCase();
-      const meta = `${role} · ${msg.timestamp || ""} · ${msg.kind || "text"}`;
-      const safe = (msg.content || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-      return `<article class="message message--${role}"><p class="message-meta">${meta}</p><div class="message-body">${safe.replace(/\n/g, "<br>")}</div></article>`;
-    })
-    .join("");
-  messagesElement.innerHTML = html;
+
+  messages.forEach((msg) => {
+    const role = normalizeMessageRole(msg.role);
+    const meta = `${role} · ${msg.timestamp || ""} · ${msg.kind || "text"}`;
+
+    const article = document.createElement("article");
+    article.className = `message message--${role}`;
+
+    const metaElement = document.createElement("p");
+    metaElement.className = "message-meta";
+    metaElement.textContent = meta;
+
+    const bodyElement = document.createElement("div");
+    bodyElement.className = "message-body";
+
+    const content = String(msg.content || "");
+    const lines = content.split("\n");
+    lines.forEach((line, index) => {
+      if (index > 0) {
+        bodyElement.appendChild(document.createElement("br"));
+      }
+      bodyElement.appendChild(document.createTextNode(line));
+    });
+
+    article.appendChild(metaElement);
+    article.appendChild(bodyElement);
+    messagesElement.appendChild(article);
+  });
   messagesElement.scrollTop = messagesElement.scrollHeight;
 }
 

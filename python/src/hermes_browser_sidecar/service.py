@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 from hermes_browser_sidecar.config import SidecarSettings
 from hermes_browser_sidecar.errors import (
     CODE_INVALID_REQUEST,
@@ -21,10 +23,13 @@ from hermes_browser_sidecar.transports.bridge import HermesBridgeTransport
 
 
 class SidecarService:
+    _PROBE_TTL = 5.0
+
     def __init__(self, settings: SidecarSettings) -> None:
         self.settings = settings
         self._bridge: HermesBridgeTransport | None = None
         self._api_server: HermesAPIServerTransport | None = None
+        self._probe_cache: dict[str, tuple[TransportProbe, float]] = {}
 
     def _build_bridge(self) -> HermesBridgeTransport:
         if self._bridge is None:
@@ -44,6 +49,18 @@ class SidecarService:
             )
         return self._api_server
 
+    def _cached_probe(self, transport: BaseTransport) -> TransportProbe:
+        now = time.monotonic()
+        key = id(transport)
+        cached = self._probe_cache.get(key)
+        if cached is not None:
+            probe, ts = cached
+            if now - ts < self._PROBE_TTL:
+                return probe
+        probe = transport.probe()
+        self._probe_cache[key] = (probe, now)
+        return probe
+
     def _select_transport(self) -> tuple[str, BaseTransport, BaseTransport | None]:
         mode = self.settings.transport
         if mode == "bridge":
@@ -52,10 +69,10 @@ class SidecarService:
             return ("api_server", self._build_api_server(), None)
         bridge = self._build_bridge()
         api_server = self._build_api_server()
-        probe = bridge.probe()
+        probe = self._cached_probe(bridge)
         if probe.ok:
             return ("bridge", bridge, api_server)
-        api_probe = api_server.probe()
+        api_probe = self._cached_probe(api_server)
         if api_probe.ok:
             return ("api_server", api_server, bridge)
         return ("bridge", bridge, api_server)
@@ -65,11 +82,14 @@ class SidecarService:
     ) -> Capabilities:
         if fallback is None:
             return active.capabilities()
+        fallback_probe = self._cached_probe(fallback)
+        if not fallback_probe.ok:
+            return active.capabilities()
         return Capabilities.union(active.capabilities(), fallback.capabilities())
 
     def _active(self) -> tuple[str, BaseTransport, BaseTransport | None, TransportProbe]:
         name, transport, fallback = self._select_transport()
-        return name, transport, fallback, transport.probe()
+        return name, transport, fallback, self._cached_probe(transport)
 
     def build_health_payload(self) -> dict[str, object]:
         name, transport, fallback, probe = self._active()

@@ -145,10 +145,12 @@ def _build_handler(service):
             except SidecarException as exc:
                 self._error_response(exc)
             except Exception as exc:  # pragma: no cover - defensive guard
+                import logging
+                logging.getLogger("hermes_browser_sidecar.server").exception("Unhandled exception in %s %s", method, self.path)
                 self._error_response(
                     SidecarException(
                         CODE_INTERNAL_ERROR,
-                        f"Internal error: {exc}",
+                        "Internal error",
                         http_status=500,
                     )
                 )
