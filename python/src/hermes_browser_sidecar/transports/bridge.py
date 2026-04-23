@@ -17,15 +17,16 @@ from hermes_browser_sidecar.transports._http import HermesUpstreamError, request
 from hermes_browser_sidecar.transports.base import BaseTransport, TransportProbe
 
 
-# CAPTURED FROM HERMES BRIDGE — VERIFY AGAINST gateway/browser_bridge.py.
-# Bridge POST /session response shape (best-effort observation):
-#   {"ok": True, "session_key": "<opaque>",
-#    "messages": [{"role": "...", "content": "...", "timestamp": "...", "kind": "..."}],
-#    "progress": {"running": bool, "error": str|null, "detail": str},
-#    "sessions": [...]   # only for action=list
+# Gateway LocalClientRequest protocol
+# Endpoint: POST /v1/local-client/request
+# Request body:
+#   {
+#     "client": {"kind": "browser-sidecar", "label": "...", "client_session_id": "..."},
+#     "action": "send" | "send_async" | "state" | "list" | "reset" | "interrupt",
+#     "message": "...",            # optional
+#     "context": {"page_context": {...}}  # optional
 #   }
-# All bridge field names are camelCase on the request side, snake_case on the
-# response side (per existing fixture). Adapter normalizes both directions.
+# Response is snake_case flat dict (gateway snapshot format).
 
 
 def _utc_now_iso() -> str:
@@ -51,7 +52,7 @@ class HermesBridgeTransport(BaseTransport):
     @property
     def session_url(self) -> str:
         parsed = urlparse(self.inject_url)
-        return urlunparse(parsed._replace(path="/session", params="", query="", fragment=""))
+        return urlunparse(parsed._replace(path="/v1/local-client/request", params="", query="", fragment=""))
 
     def _auth_headers(self) -> dict[str, str]:
         if self.token:
@@ -101,24 +102,25 @@ class HermesBridgeTransport(BaseTransport):
         page_context: PageContext | None = None,
     ) -> dict[str, object]:
         payload: dict[str, object] = {
+            "client": {
+                "kind": "browser-sidecar",
+                "label": self.browser_label,
+                "client_session_id": session_id,
+            },
             "action": action,
-            "browserLabel": self.browser_label,
-            "clientSessionId": session_id,
         }
-        if session_key:
-            payload["sessionKey"] = session_key
-        if limit is not None:
-            payload["limit"] = limit
         if message:
             payload["message"] = message
         if page_context is not None:
-            payload["pageContext"] = {
-                "title": page_context.title,
-                "url": page_context.url,
-                "selection": page_context.selection,
-                "pageText": page_context.page_text,
-                "contentKind": page_context.content_kind,
-                "metadata": dict(page_context.metadata),
+            payload["context"] = {
+                "page_context": {
+                    "title": page_context.title,
+                    "url": page_context.url,
+                    "selection": page_context.selection,
+                    "page_text": page_context.page_text,
+                    "content_kind": page_context.content_kind,
+                    "metadata": dict(page_context.metadata),
+                }
             }
         return payload
 
@@ -175,7 +177,10 @@ class HermesBridgeTransport(BaseTransport):
         raw_messages = raw.get("messages") or []
         if not isinstance(raw_messages, list):
             raw_messages = []
-        progress = self._normalize_progress(raw.get("progress"))
+        progress_raw = raw.get("progress")
+        if progress_raw is None:
+            progress_raw = raw
+        progress = self._normalize_progress(progress_raw)
         updated_at = raw.get("updated_at") or raw.get("updatedAt") or _utc_now_iso()
         if not isinstance(updated_at, str):
             updated_at = _utc_now_iso()
