@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Hermes Browser Sidecar",
-  "version": "0.1.0",
-  "description": "Scaffold side panel for a portable Hermes browser sidecar.",
+  "version": "0.2.0",
+  "description": "Side panel client for the local Hermes browser sidecar service.",
   "permissions": [
     "sidePanel",
-    "storage"
+    "storage",
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
-    "http://127.0.0.1/*",
-    "http://localhost/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,4 +23,3 @@
     "default_title": "Open Hermes Browser Sidecar"
   }
 }
-

@@ -11,7 +11,7 @@
       <header class="hero">
         <p class="eyebrow">hermes-browser-sidecar</p>
         <h1>Options</h1>
-        <p class="subhead">Point the extension at the local sidecar service. The extension intentionally does not talk to Hermes directly.</p>
+        <p class="subhead">Point the extension at the local sidecar service. The extension only talks to the sidecar — never to Hermes directly.</p>
       </header>
 
       <section class="card">
@@ -19,22 +19,19 @@
           <span>Backend URL</span>
           <input id="backend-url" type="url" spellcheck="false" placeholder="http://127.0.0.1:8787">
         </label>
-        <label class="field">
-          <span>Transport mode</span>
-          <select id="transport-mode">
-            <option value="hybrid">hybrid</option>
-            <option value="bridge">bridge</option>
-            <option value="api_server">api_server</option>
-          </select>
+        <label class="field checkbox-row">
+          <input id="include-page-default" type="checkbox" checked>
+          <span>Include active page context by default</span>
         </label>
         <div class="button-row">
           <button id="save-button" type="button">Save</button>
           <button id="health-button" type="button" class="ghost">Check health</button>
         </div>
         <p id="status" class="status" role="status" aria-live="polite"></p>
+        <p class="label">Capabilities</p>
+        <pre id="capabilities" class="pre">(load options or click Check health)</pre>
       </section>
     </main>
     <script src="options.js"></script>
   </body>
 </html>
-

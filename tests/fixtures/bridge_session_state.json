@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "session_key": "session-1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "hello",
+      "timestamp": "2026-04-22T18:00:00Z",
+      "kind": "text"
+    },
+    {
+      "role": "assistant",
+      "content": "hi there",
+      "timestamp": "2026-04-22T18:00:01Z",
+      "kind": "text"
+    }
+  ],
+  "progress": {"running": false, "error": null, "detail": ""},
+  "updated_at": "2026-04-22T18:00:01Z"
+}
