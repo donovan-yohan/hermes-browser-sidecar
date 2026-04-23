@@ -1,0 +1,16 @@
+{
+  "id": "resp_abc123",
+  "object": "response",
+  "created": 1714000000,
+  "model": "hermes",
+  "previous_response_id": null,
+  "output": [
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {"type": "output_text", "text": "Hello from Hermes API server."}
+      ]
+    }
+  ]
+}

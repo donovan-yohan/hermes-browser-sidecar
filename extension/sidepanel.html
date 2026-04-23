@@ -8,27 +8,34 @@
   </head>
   <body>
     <main class="shell">
-      <header class="hero">
-        <p class="eyebrow">scaffold</p>
-        <h1>Hermes Browser Sidecar</h1>
-        <p class="subhead">This side panel is intentionally narrow for now: it validates the local sidecar boundary before any full Hermes transport is ported.</p>
+      <header class="panel-head">
+        <p class="eyebrow">hermes browser sidecar</p>
+        <h1 id="page-title" class="page-title">Loading…</h1>
+        <p id="page-meta" class="meta-line"></p>
       </header>
 
-      <section class="card">
-        <p class="label">Backend</p>
-        <p id="backend-url" class="mono">Loading...</p>
-        <p class="label">Transport</p>
-        <p id="transport-summary">Loading...</p>
-        <p class="label">Capabilities</p>
-        <pre id="capabilities" class="pre">Loading...</pre>
-        <div class="button-row">
-          <button id="refresh-button" type="button">Refresh</button>
-          <button id="options-button" type="button" class="ghost">Options</button>
+      <section class="card chat-card">
+        <div id="chat-messages" class="chat-messages" aria-live="polite">
+          <p class="empty-state">No messages yet. Capabilities and upstream status appear in Options.</p>
         </div>
+
+        <form id="chat-form" class="chat-form" autocomplete="off">
+          <label class="checkbox-row">
+            <input id="include-page" type="checkbox" checked>
+            <span>Send active page context</span>
+          </label>
+          <textarea id="chat-input" placeholder="Ask Hermes…" rows="3"></textarea>
+          <div class="button-row compact-row">
+            <button id="send-button" type="submit">Send</button>
+            <button id="reset-button" type="button" class="ghost">Reset</button>
+            <button id="interrupt-button" type="button" class="ghost" hidden>Interrupt</button>
+            <button id="refresh-button" type="button" class="ghost">Refresh</button>
+            <button id="options-button" type="button" class="ghost">Options</button>
+          </div>
+        </form>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </section>
     </main>
     <script src="sidepanel.js"></script>
   </body>
 </html>
-

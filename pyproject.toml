@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hermes-browser-sidecar"
-version = "0.1.0"
-description = "Portable Hermes browser sidecar scaffold"
+version = "0.2.0"
+description = "Portable Hermes browser sidecar service"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Donovan Yohan" }]

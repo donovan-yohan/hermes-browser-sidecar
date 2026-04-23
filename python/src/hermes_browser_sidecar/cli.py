@@ -4,18 +4,19 @@ import argparse
 import json
 
 from hermes_browser_sidecar.config import SidecarSettings
+from hermes_browser_sidecar.protocol import PROTOCOL_VERSION
 from hermes_browser_sidecar.service import SidecarService
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="hermes-browser-sidecar",
-        description="Starter local sidecar service for Hermes browser integrations.",
+        description="Local sidecar service for Hermes browser integrations.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("print-config", help="Print normalized sidecar settings as JSON.")
-    subparsers.add_parser("probe", help="Probe the configured upstream Hermes surface.")
-    subparsers.add_parser("serve", help="Run the local sidecar scaffold HTTP service.")
+    subparsers.add_parser("probe", help="Probe the configured upstream and print health payload.")
+    subparsers.add_parser("serve", help="Run the local sidecar HTTP service.")
     return parser
 
 
@@ -27,7 +28,9 @@ def main(argv: list[str] | None = None) -> int:
     service = SidecarService(settings)
 
     if args.command == "print-config":
-        print(json.dumps(settings.to_dict(), indent=2, sort_keys=True))
+        payload = settings.to_dict()
+        payload["protocol_version"] = PROTOCOL_VERSION
+        print(json.dumps(payload, indent=2, sort_keys=True))
         return 0
 
     if args.command == "probe":
@@ -40,4 +43,3 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.error(f"Unsupported command: {args.command}")
     return 2
-

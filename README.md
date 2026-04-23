@@ -1,32 +1,26 @@
 # hermes-browser-sidecar
 
-`hermes-browser-sidecar` is a public extraction scaffold for a portable Hermes browser sidecar.
+`hermes-browser-sidecar` owns a stable local HTTP protocol for the Hermes
+browser side panel, plus pluggable transport adapters that translate that
+protocol into upstream Hermes calls.
 
-The current recommendation is a hybrid architecture:
+The browser extension only ever talks to the sidecar (`http://127.0.0.1:8787`
+by default). It never speaks to Hermes directly, never knows Hermes bridge
+action names, and never sees Hermes bearer tokens.
 
-- the browser extension stays transport-agnostic
-- a local sidecar service owns the stable protocol boundary
-- the first backend adapter targets Hermes Agent's existing browser bridge
-- a future adapter can use the OpenAI-compatible API server where that surface is sufficient
+## Architecture
 
-This repository is intentionally conservative. It does not attempt to port the full Hermes sidecar yet. The current scaffold focuses on investigation, architecture, starter packaging, and a minimal no-build MV3 extension shell.
-
-## Why Hybrid
-
-The existing Hermes browser sidecar is coupled to a custom localhost bridge with sidecar-specific actions like `state`, `list`, `inspect`, `reset`, `interrupt`, `send_async`, `tts`, `transcribe_audio`, and runtime config helpers. That is practical for short-term compatibility, but it is not a clean public boundary.
-
-Hermes Agent also exposes an OpenAI-compatible API server. That surface is much cleaner, but today it does not provide sidecar-specific state, page-context packaging, interrupt semantics, or browser-native extras on its own.
-
-The compromise is to stabilize a local sidecar protocol here, keep the extension dumb, and let backend adapters absorb Hermes-specific integration seams.
-
-## Current Scaffold
-
-- [docs/investigation.md](docs/investigation.md)
-- [docs/architecture.md](docs/architecture.md)
-- [docs/extraction-plan.md](docs/extraction-plan.md)
-- `python/` for the starter backend package
-- `extension/` for the starter Chrome/Chromium MV3 side panel client
-- [TODO.md](TODO.md) for concrete next steps
+- **Public protocol** (`python/src/hermes_browser_sidecar/protocol/`) —
+  snake_case JSON dataclasses. Single source of truth for what extensions see.
+  See [docs/protocol.md](docs/protocol.md).
+- **Transport adapters** (`python/src/hermes_browser_sidecar/transports/`) —
+  internal. Translate public requests into upstream calls and normalize
+  upstream responses back into public types.
+  - `bridge.py` targets the Hermes browser bridge `/session` action endpoint.
+  - `api_server.py` targets the Hermes OpenAI-compatible Responses API.
+- **Service** (`service.py`) — owns adapter selection, capability union,
+  request routing.
+- **Server** (`server.py`) — pure HTTP: routing, CORS, error mapping.
 
 ## Quick Start
 
@@ -38,45 +32,77 @@ PYTHONPATH=python/src python3 -m hermes_browser_sidecar probe
 PYTHONPATH=python/src python3 -m hermes_browser_sidecar serve
 ```
 
-For a normal editable install on a standard Python toolchain:
-
+Editable install:
 ```bash
 python3 -m pip install -e .
-hermes-browser-sidecar print-config
-hermes-browser-sidecar probe
 hermes-browser-sidecar serve
 ```
 
-Defaults:
+### Smoke
 
-- sidecar service: `http://127.0.0.1:8787`
-- Hermes bridge probe target: `http://127.0.0.1:8765/inject`
-- Hermes API server probe target: `http://127.0.0.1:8642/v1`
-- transport mode: `hybrid`
+```bash
+curl -sS http://127.0.0.1:8787/health | python3 -m json.tool
+curl -sS http://127.0.0.1:8787/v1/capabilities | python3 -m json.tool
+curl -sS 'http://127.0.0.1:8787/v1/session/state?session_id=panel-1' \
+  | python3 -m json.tool
+```
 
-### Extension scaffold
+### Tests
 
-1. Open `chrome://extensions`
-2. Enable `Developer mode`
-3. Click `Load unpacked`
-4. Select the local `extension/` directory
-5. Open the side panel or the options page
+```bash
+python3 -m pytest tests/
+```
 
-The extension currently verifies sidecar health and reads declared capabilities. It does not yet attempt a full Hermes chat transport.
+### Extension
 
-## Repository Layout
+1. `chrome://extensions` → enable **Developer mode**
+2. **Load unpacked** → select `extension/`
+3. Click the extension action to open the side panel.
+4. Visit a regular page (the extension uses `chrome.scripting` to read page
+   text/selection; it cannot inject into `chrome://` pages).
+
+The extension auto-fetches `/v1/capabilities` and renders only enabled
+features; if the active adapter probe fails, send/reset/interrupt return 502
+and the side panel shows the upstream error.
+
+## Configuration
+
+| Env var                          | Default                          | Description |
+|----------------------------------|----------------------------------|-------------|
+| `HERMES_SIDECAR_HOST`            | `127.0.0.1`                      | Sidecar listen host. |
+| `HERMES_SIDECAR_PORT`            | `8787`                           | Sidecar listen port. |
+| `HERMES_SIDECAR_TRANSPORT`       | `hybrid`                         | `bridge`, `api_server`, or `hybrid`. |
+| `HERMES_SIDECAR_BROWSER_LABEL`   | `Hermes Browser Sidecar`         | Identifier sent to the bridge for client routing. |
+| `HERMES_BROWSER_BRIDGE_URL`      | `http://127.0.0.1:8765/inject`   | Hermes browser bridge base. |
+| `HERMES_BROWSER_BRIDGE_TOKEN`    | (empty)                          | Bridge bearer token. |
+| `HERMES_API_SERVER_URL`          | `http://127.0.0.1:8642/v1`       | Hermes API server base. |
+| `HERMES_API_SERVER_KEY`          | (empty)                          | API server bearer token. |
+| `HERMES_API_SERVER_MODEL`        | `hermes`                         | Model name passed to `/v1/responses`. |
+
+## Hybrid mode
+
+In hybrid mode the service probes the bridge first; if reachable, it routes
+session calls there and treats the API server as a fallback. If the bridge is
+down, it falls back to the API server adapter. Capabilities reported on
+`/v1/capabilities` are the union of all reachable adapters, so the extension
+can render features as soon as any adapter supports them.
+
+## Security note
+
+The sidecar has **no authentication** on its local HTTP surface. It is meant
+to bind to `127.0.0.1` only. Auth is a Phase 4 item — see [TODO.md](TODO.md).
+
+## Repository layout
 
 ```text
 .
-├── docs/
-├── extension/
-├── python/
-│   └── src/hermes_browser_sidecar/
-├── tests/
-├── CODEX_TASK.md
+├── docs/                # protocol + architecture docs
+├── extension/           # MV3 side panel client
+├── python/src/hermes_browser_sidecar/
+│   ├── protocol/        # public sidecar types
+│   ├── transports/      # internal adapters (bridge, api_server)
+│   ├── server.py        # HTTP + CORS + error mapping
+│   └── service.py       # hybrid selection + typed handlers
+├── tests/               # pytest suites + fakes + fixtures
 └── TODO.md
 ```
-
-## Provenance
-
-This scaffold is based on investigation of the Hermes Agent fork described in [docs/investigation.md](docs/investigation.md). No substantial source files were copied into this repository during this pass.
